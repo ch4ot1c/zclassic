@@ -120,10 +120,10 @@ public:
         vAlertPubKey = ParseHex("04a60129fc1915c0e35d92328cbc27cba5dc367dd0eaf7059616aa455afc3f7622161572e1197af352baff0d6563bb75316d095241dd94f809d7f6eefb49dbdff4");
         nDefaultPort = 8033;
         nPruneAfterHeight = 100000;
-        const size_t N = 200, K = 9;
-        BOOST_STATIC_ASSERT(equihash_parameters_acceptable(N, K));
-        nEquihashN = N;
-        nEquihashK = K;
+        eh_epoch_1 = eh200_9;
+        eh_epoch_2 = eh192_7;
+        eh_epoch_1_endblock = 9999999;
+        eh_epoch_2_startblock = 9999999;
 
         genesis = CreateGenesisBlock(
             1478403829,
@@ -279,9 +279,9 @@ public:
         consensus.vUpgrades[Consensus::UPGRADE_TESTDUMMY].nActivationHeight =
             Consensus::NetworkUpgrade::NO_ACTIVATION_HEIGHT;
         consensus.vUpgrades[Consensus::UPGRADE_OVERWINTER].nProtocolVersion = 170003;
-        consensus.vUpgrades[Consensus::UPGRADE_OVERWINTER].nActivationHeight = 20;
+        consensus.vUpgrades[Consensus::UPGRADE_OVERWINTER].nActivationHeight = 1;
         consensus.vUpgrades[Consensus::UPGRADE_SAPLING].nProtocolVersion = 170007;
-        consensus.vUpgrades[Consensus::UPGRADE_SAPLING].nActivationHeight = 20;
+        consensus.vUpgrades[Consensus::UPGRADE_SAPLING].nActivationHeight = 1;
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000000000000000");
@@ -293,10 +293,10 @@ public:
         vAlertPubKey = ParseHex("044d71d7faa4e6d77c08d3a1e8c27fafc922de9ec8c91e809bb0c4788058301ec18a68d9fe42b6ec0467bb7ca7f7ecaecbc05c0b6437d9de21a59232fd917a8803");
         nDefaultPort = 18033;
         nPruneAfterHeight = 1000;
-        const size_t N = 200, K = 9;
-        BOOST_STATIC_ASSERT(equihash_parameters_acceptable(N, K));
-        nEquihashN = N;
-        nEquihashK = K;
+        eh_epoch_1 = eh200_9;
+        eh_epoch_2 = eh192_7;
+        eh_epoch_1_endblock = 5;
+        eh_epoch_2_startblock = 5;
 
         genesis = CreateGenesisBlock(
             1479443947,
@@ -423,10 +423,10 @@ public:
         pchMessageStart[3] = 0x5f;
         nDefaultPort = 18033;
         nPruneAfterHeight = 1000;
-        const size_t N = 48, K = 5;
-        BOOST_STATIC_ASSERT(equihash_parameters_acceptable(N, K));
-        nEquihashN = N;
-        nEquihashK = K;
+        eh_epoch_1 = eh48_5;
+        eh_epoch_2 = eh48_5;
+        eh_epoch_1_endblock = 1;
+        eh_epoch_2_startblock = 1;
 
         genesis = CreateGenesisBlock(
             1482971059,
@@ -556,4 +556,21 @@ std::string CChainParams::GetFoundersRewardAddressAtIndex(int i) const {
 void UpdateNetworkUpgradeParameters(Consensus::UpgradeIndex idx, int nActivationHeight)
 {
     regTestParams.UpdateNetworkUpgradeParameters(idx, nActivationHeight);
+}
+
+int validEHparameterList(EHparameters *ehparams, unsigned long blockheight, const CChainParams& params){
+    //if in overlap period, there will be two valid solutions, else 1.
+    //The upcoming version of EH is preferred so will always be first element
+    //returns number of elements in list
+    if(blockheight>=params.eh_epoch_2_start() && blockheight>params.eh_epoch_1_end()){
+        ehparams[0]=params.eh_epoch_2_params();
+        return 1;
+    }
+    if(blockheight<params.eh_epoch_2_start()){
+        ehparams[0]=params.eh_epoch_1_params();
+        return 1;
+    }
+    ehparams[0]=params.eh_epoch_2_params();
+    ehparams[1]=params.eh_epoch_1_params();
+    return 2;
 }
