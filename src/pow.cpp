@@ -17,7 +17,7 @@
 #include "sodium.h"
 
 /**
- * Manually increase difficulty by a multiplier. Note that because of the use of compact bits, this will 
+ * Manually increase difficulty by a multiplier. Note that because of the use of compact bits, this will
  * only be an approx increase, not a 100% precise increase.
  */
 unsigned int IncreaseDifficultyBy(unsigned int nBits, int64_t multiplier, const Consensus::Params& params) {
@@ -38,13 +38,13 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     // Genesis block
     if (pindexLast == NULL)
         return nProofOfWorkLimit;
-    
+
     int nHeight = pindexLast->nHeight + 1;
 
     // For upgrade mainnet forks, we'll adjust the difficulty down for the first nPowAveragingWindow blocks
-    if (params.scaleDifficultyAtUpgradeFork && nHeight >= params.vUpgrades[Consensus::UPGRADE_DIFFADJ].nActivationHeight && 
+    if (params.scaleDifficultyAtUpgradeFork && nHeight >= params.vUpgrades[Consensus::UPGRADE_DIFFADJ].nActivationHeight &&
             nHeight < params.vUpgrades[Consensus::UPGRADE_DIFFADJ].nActivationHeight + params.nPowAveragingWindow) {
-        
+
         if (pblock && pblock->GetBlockTime() > pindexLast->GetBlockTime() + params.nPowTargetSpacing * 12) {
             // If > 30 mins, allow min difficulty
             LogPrintf("Returning level 1 difficulty\n");
@@ -64,7 +64,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
             LogPrintf("Falling through\n");
         }
     }
-    
+
     {
         // Comparing to pindexLast->nHeight with >= because this function
         // returns the work required for the block after pindexLast.
@@ -132,9 +132,10 @@ unsigned int CalculateNextWorkRequired(arith_uint256 bnAvg,
     return bnNew.GetCompact();
 }
 
-bool CheckEquihashSolution(const CBlockHeader *pblock, const CChainParams& params)
+bool CheckPowSolution(const CBlockHeader *pblock, const CChainParams& params)
 {
-    // Derive n, k from the solution size as the block header does not specify parameters used.
+    // Derive whether Equihash or RandomX, and possibly which Equihash (n and k params)
+    // from the solution size, as the block header does not specify parameters used.
     // In the future, we could pass in the block height and call EquihashN() and EquihashK()
     // to perform a contextual check against the parameters in use at a given block height.
     unsigned int n, k;
@@ -151,6 +152,10 @@ bool CheckEquihashSolution(const CBlockHeader *pblock, const CChainParams& param
     } else if (nSolSize == 400) {
         n = 192;
         k = 7;
+    } else if (nSolSize == 32) { // RandomX
+        // TODO get key blockhash
+        if (CheckRandomxSolution(k, pblock))
+            return true;
     } else {
         return error("%s: Unsupported solution size of %d", __func__, nSolSize);
     }
@@ -172,7 +177,7 @@ bool CheckEquihashSolution(const CBlockHeader *pblock, const CChainParams& param
     bool isValid;
     EhIsValidSolution(n, k, state, pblock->nSolution, isValid);
     if (!isValid)
-        return error("CheckEquihashSolution(): invalid solution");
+        return error("CheckPowSolution(): invalid solution");
 
     return true;
 }

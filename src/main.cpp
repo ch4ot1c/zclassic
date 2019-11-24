@@ -1755,7 +1755,7 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos)
     }
 
     // Check the header
-    if (!(CheckEquihashSolution(&block, Params()) &&
+    if (!(CheckPowSolution(&block, Params()) &&
           CheckProofOfWork(block.GetHash(), block.nBits, Params().GetConsensus())))
         return error("ReadBlockFromDisk: Errors in block header at %s", pos.ToString());
 
@@ -3550,7 +3550,7 @@ template <typename F> void UpdateFlagsForBlock(CBlockIndex *pindexBase,
 
 template <typename F, typename C> void UpdateFlags(CBlockIndex *pindex, F f, C fchild) {
     AssertLockHeld(cs_main);
- 
+
     // Update the current block.
     UpdateFlagsForBlock(pindex, pindex, f);
 
@@ -3895,9 +3895,9 @@ bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool f
         return state.DoS(100, error("CheckBlockHeader(): block version too low"),
                          REJECT_INVALID, "version-too-low");
 
-    // Check Equihash solution is valid
-    if (fCheckPOW && !CheckEquihashSolution(&block, Params()))
-        return state.DoS(100, error("CheckBlockHeader(): Equihash solution invalid"),
+    // Check Equihash or RandomX solution is valid
+    if (fCheckPOW && !CheckPowSolution(&block, Params()))
+        return state.DoS(100, error("CheckBlockHeader(): Equihash or RandomX solution invalid"),
                          REJECT_INVALID, "invalid-solution");
 
     // Check proof of work matches claimed amount
@@ -4526,7 +4526,7 @@ bool static LoadBlockIndexDB()
             setBlockIndexCandidates.insert(pindex);
         if (pindex->nStatus & BLOCK_FAILED_MASK && (!pindexBestInvalid || pindex->nChainWork > pindexBestInvalid->nChainWork))
             pindexBestInvalid = pindex;
-        
+
         if (pindex->nStatus & BLOCK_PARKED_MASK &&
             (!pindexBestParked ||
              pindex->nChainWork > pindexBestParked->nChainWork)) {

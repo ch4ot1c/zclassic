@@ -64,7 +64,7 @@ void post_wallet_load(){
     // Generate coins in the background
     if (pwalletMain || !GetArg("-mineraddress", "").empty())
         GenerateBitcoins(GetBoolArg("-gen", false), GetArg("-genproclimit", 1), Params());
-#endif    
+#endif
 }
 
 
@@ -214,14 +214,14 @@ std::vector<double> benchmark_solve_equihash_threaded(int nThreads)
 }
 #endif // ENABLE_MINING
 
-double benchmark_verify_equihash()
+double benchmark_verify_equihash_randomx()
 {
     CChainParams params = Params(CBaseChainParams::MAIN);
     CBlock genesis = Params(CBaseChainParams::MAIN).GenesisBlock();
     CBlockHeader genesis_header = genesis.GetBlockHeader();
     struct timeval tv_start;
     timer_start(tv_start);
-    CheckEquihashSolution(&genesis_header, params);
+    CheckPowSolution(&genesis_header, params);
     return timer_stop(tv_start);
 }
 
@@ -281,9 +281,9 @@ double benchmark_large_tx(size_t nInputs)
 }
 
 // The two benchmarks, try_decrypt_sprout_notes and try_decrypt_sapling_notes,
-// are checking worst-case scenarios. In both we add n keys to a wallet, 
+// are checking worst-case scenarios. In both we add n keys to a wallet,
 // create a transaction using a key not in our original list of n, and then
-// check that the transaction is not associated with any of the keys in our 
+// check that the transaction is not associated with any of the keys in our
 // wallet. We call assert(...) to ensure that this is true.
 double benchmark_try_decrypt_sprout_notes(size_t nKeys)
 {

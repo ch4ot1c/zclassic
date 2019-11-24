@@ -2767,8 +2767,8 @@ UniValue zc_benchmark(const UniValue& params, bool fHelp)
                 sample_times.insert(sample_times.end(), vals.begin(), vals.end());
             }
 #endif
-        } else if (benchmarktype == "verifyequihash") {
-            sample_times.push_back(benchmark_verify_equihash());
+        } else if (benchmarktype == "verifyequihashrandomx") {
+            sample_times.push_back(benchmark_verify_equihash_randomx());
         } else if (benchmarktype == "validatelargetx") {
             // Number of inputs in the spending transaction that we will simulate
             int nInputs = 11130;

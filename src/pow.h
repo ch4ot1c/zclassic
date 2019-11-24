@@ -21,8 +21,8 @@ unsigned int CalculateNextWorkRequired(arith_uint256 bnAvg,
                                        int64_t nLastBlockTime, int64_t nFirstBlockTime,
                                        const Consensus::Params&);
 
-/** Check whether the Equihash solution in a block header is valid */
-bool CheckEquihashSolution(const CBlockHeader *pblock, const CChainParams&);
+/** Check whether the Pow solution (RandomX or Equihash, based on size) in a block header is valid */
+bool CheckPowSolution(const CBlockHeader *pblock, const CChainParams&);
 
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
 bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&);

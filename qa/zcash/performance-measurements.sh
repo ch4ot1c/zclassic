@@ -203,8 +203,8 @@ case "$1" in
             solveequihash)
                 zcash_rpc_slow zcbenchmark solveequihash 50 "${@:3}"
                 ;;
-            verifyequihash)
-                zcash_rpc zcbenchmark verifyequihash 1000
+            verifyequihashrandomx)
+                zcash_rpc zcbenchmark verifyequihashrandomx 1000
                 ;;
             validatelargetx)
                 zcash_rpc zcbenchmark validatelargetx 10 "${@:3}"
@@ -223,7 +223,7 @@ case "$1" in
                 zcash_rpc zcbenchmark sendtoaddress 10 "${@:4}"
                 ;;
             loadwallet)
-                zcash_rpc zcbenchmark loadwallet 10 
+                zcash_rpc zcbenchmark loadwallet 10
                 ;;
             listunspent)
                 zcash_rpc zcbenchmark listunspent 10
