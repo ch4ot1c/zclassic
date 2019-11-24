@@ -153,8 +153,14 @@ bool CheckPowSolution(const CBlockHeader *pblock, const CChainParams& params)
         n = 192;
         k = 7;
     } else if (nSolSize == 32) { // RandomX
-        // TODO get key blockhash
-        if (CheckRandomxSolution(k, pblock))
+        // Assume: Fork at multiple of 2048
+        // Only use prev keyblock if >=64 past; else use prior to that
+        assert(forkHeight%2048 == 0)
+        auto keyBlockHeight = (nHeight%2048 >= 64) ? (nHeight/2048 - 1)*2048 : (nHeight/2048 - 2)*2048;
+        // Note: we don't need to commit this hash; it's already part of the chain history.
+        auto keyBlockHash = GetBlockHash(keyBlockHeight); // K
+
+        if (CheckRandomxSolution(keyBlockHash, pblock))
             return true;
     } else {
         return error("%s: Unsupported solution size of %d", __func__, nSolSize);
@@ -180,6 +186,33 @@ bool CheckPowSolution(const CBlockHeader *pblock, const CChainParams& params)
         return error("CheckPowSolution(): invalid solution");
 
     return true;
+}
+
+bool CheckRandomxSolution(const uint256 keyBlockHash, const CBlockHeader *pblock) {
+    // I = the block header minus nonce and solution.
+    CEquihashInput I{*pblock}; // TODO rename to CSolverInput
+    // I||V
+    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+    ss << I;
+    ss << pblock->nNonce; // H
+
+    // TODO RandomxIsValidSolution();:
+	// const char myKey[] = "RandomX example key"; (K, keyBlockHash)
+	// const char myInput[] = "RandomX example input"; (H)
+	char hash[256];
+
+	randomx_flags flags = randomx_get_flags();
+	randomx_cache *cache = randomx_alloc_cache(flags);
+	randomx_init_cache(cache, keyBlockHash, sizeof(keyBlockHash)); // TODO static sizeof(keyBlockHash)
+	randomx_vm *machine = randomx_create_vm(flags, cache, NULL);
+
+	randomx_calculate_hash(machine, (unsigned char*)&ss[0], sizeof((unsigned char*)&ss[0]), hash); // TODO static sizeof
+
+	randomx_destroy_vm(machine);
+	randomx_release_cache(cache);
+
+    // Now, does this match the 'solution'
+    return std::equals(hash, pblock->nSolution);
 }
 
 bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params& params)

@@ -23,6 +23,8 @@ unsigned int CalculateNextWorkRequired(arith_uint256 bnAvg,
 
 /** Check whether the Pow solution (RandomX or Equihash, based on size) in a block header is valid */
 bool CheckPowSolution(const CBlockHeader *pblock, const CChainParams&);
+/** Subroutine of CheckPowSolution */
+bool CheckRandomxSolution(const uint256 keyBlockHash, const CBlockHeader *pblock);
 
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
 bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&);
