@@ -13,6 +13,7 @@
 #include "streams.h"
 #include "uint256.h"
 #include "util.h"
+#include "main.h"
 
 #include "sodium.h"
 
@@ -153,12 +154,12 @@ bool CheckPowSolution(const CBlockHeader *pblock, const CChainParams& params)
         n = 192;
         k = 7;
     } else if (nSolSize == 32) { // RandomX
-        // Assume: Fork at multiple of 2048
+        // Assume: Fork occurs at multiple of 2048
+        assert(forkHeight%2048 == 0);
         // Only use prev keyblock if >=64 past; else use prior to that
-        assert(forkHeight%2048 == 0)
         auto keyBlockHeight = (nHeight%2048 >= 64) ? (nHeight/2048 - 1)*2048 : (nHeight/2048 - 2)*2048;
         // Note: we don't need to commit this hash; it's already part of the chain history.
-        auto keyBlockHash = GetBlockHash(keyBlockHeight); // K
+        auto keyBlockHash = chainActive[keyBlockHeight]->GetBlockHash(); // K
 
         if (CheckRandomxSolution(keyBlockHash, pblock))
             return true;
@@ -212,7 +213,7 @@ bool CheckRandomxSolution(const uint256 keyBlockHash, const CBlockHeader *pblock
 	randomx_release_cache(cache);
 
     // Now, does this match the 'solution'
-    return std::equals(hash, pblock->nSolution);
+    return std::equal(std::begin(hash), std::end(hash), pblock->nSolution.begin());
 }
 
 bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params& params)
