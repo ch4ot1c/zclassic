@@ -14,6 +14,7 @@
 #include "uint256.h"
 #include "util.h"
 #include "main.h"
+#include "randomx.h"
 
 #include "sodium.h"
 
@@ -155,7 +156,9 @@ bool CheckPowSolution(const CBlockHeader *pblock, const CChainParams& params)
         k = 7;
     } else if (nSolSize == 32) { // RandomX
         // Assume: Fork occurs at multiple of 2048
-        assert(forkHeight%2048 == 0);
+        auto forkHeight = 2048*200; // TODO set chainparams
+        assert(forkHeight > 2048 && forkHeight%2048 == 0);
+        auto nHeight = pblock->nHeight; // TODO access height from here
         // Only use prev keyblock if >=64 past; else use prior to that
         auto keyBlockHeight = (nHeight%2048 >= 64) ? (nHeight/2048 - 1)*2048 : (nHeight/2048 - 2)*2048;
         // Note: we don't need to commit this hash; it's already part of the chain history.
@@ -189,25 +192,23 @@ bool CheckPowSolution(const CBlockHeader *pblock, const CChainParams& params)
     return true;
 }
 
-bool CheckRandomxSolution(const uint256 keyBlockHash, const CBlockHeader *pblock) {
+bool CheckRandomxSolution(const uint256 keyBlockHash /** K */, const CBlockHeader *pblock) {
     // I = the block header minus nonce and solution.
     CEquihashInput I{*pblock}; // TODO rename to CSolverInput
     // I||V
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss << I;
     ss << pblock->nNonce; // H
+    // TODO or do we need prev block data?
 
-    // TODO RandomxIsValidSolution();:
-	// const char myKey[] = "RandomX example key"; (K, keyBlockHash)
-	// const char myInput[] = "RandomX example input"; (H)
 	char hash[256];
 
 	randomx_flags flags = randomx_get_flags();
 	randomx_cache *cache = randomx_alloc_cache(flags);
-	randomx_init_cache(cache, keyBlockHash, sizeof(keyBlockHash)); // TODO static sizeof(keyBlockHash)
+	randomx_init_cache(cache, keyBlockHash.begin(), sizeof(keyBlockHash));
 	randomx_vm *machine = randomx_create_vm(flags, cache, NULL);
 
-	randomx_calculate_hash(machine, (unsigned char*)&ss[0], sizeof((unsigned char*)&ss[0]), hash); // TODO static sizeof
+	randomx_calculate_hash(machine, (unsigned char*)&ss[0], sizeof((unsigned char*)&ss[0]), hash);
 
 	randomx_destroy_vm(machine);
 	randomx_release_cache(cache);

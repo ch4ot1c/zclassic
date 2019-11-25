@@ -662,6 +662,8 @@ if test x$use_tests = xyes; then
   fi
 fi
 
+LIBS="-lrandomx $LIBS"
+
 if test x$use_boost = xyes; then
 BOOST_LIBS="$BOOST_LDFLAGS $BOOST_SYSTEM_LIB $BOOST_FILESYSTEM_LIB $BOOST_PROGRAM_OPTIONS_LIB $BOOST_THREAD_LIB $BOOST_CHRONO_LIB"
 fi
