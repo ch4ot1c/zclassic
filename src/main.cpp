@@ -2542,6 +2542,11 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
     // DERSIG (BIP66) is also always enforced, but does not have a flag.
 
+    auto consensus = chainParams.GetConsensus();
+    if (NetworkUpgradeActive(pindex->nHeight, chainparams.GetConsensus(), Consensus::UPGRADE_CHECKDATASIG)) {
+        flags |= SCRIPT_VERIFY_CHECKDATASIG_SIGOPS;
+    }
+
     CBlockUndo blockundo;
 
     CCheckQueueControl<CScriptCheck> control(fExpensiveChecks && nScriptCheckThreads ? &scriptcheckqueue : NULL);
@@ -3550,7 +3555,7 @@ template <typename F> void UpdateFlagsForBlock(CBlockIndex *pindexBase,
 
 template <typename F, typename C> void UpdateFlags(CBlockIndex *pindex, F f, C fchild) {
     AssertLockHeld(cs_main);
- 
+
     // Update the current block.
     UpdateFlagsForBlock(pindex, pindex, f);
 
@@ -4526,7 +4531,7 @@ bool static LoadBlockIndexDB()
             setBlockIndexCandidates.insert(pindex);
         if (pindex->nStatus & BLOCK_FAILED_MASK && (!pindexBestInvalid || pindex->nChainWork > pindexBestInvalid->nChainWork))
             pindexBestInvalid = pindex;
-        
+
         if (pindex->nStatus & BLOCK_PARKED_MASK &&
             (!pindexBestParked ||
              pindex->nChainWork > pindexBestParked->nChainWork)) {

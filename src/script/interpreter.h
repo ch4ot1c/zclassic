@@ -86,6 +86,12 @@ enum
     //
     // See BIP65 for details.
     SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY = (1U << 9),
+
+    // Count sigops for OP_CHECKDATASIG and variant. The interpreter treats
+    // OP_CHECKDATASIG(VERIFY) as always valid, this flag only affects sigops
+    // counting.
+    //
+    SCRIPT_VERIFY_CHECKDATASIG_SIGOPS = (1U << 10),
 };
 
 bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned int flags, ScriptError* serror);

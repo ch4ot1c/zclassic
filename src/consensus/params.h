@@ -28,6 +28,7 @@ enum UpgradeIndex {
     UPGRADE_SAPLING,
     UPGRADE_BUBBLES,
     UPGRADE_DIFFADJ,
+    UPGRADE_CHECKDATASIG,
     // NOTE: Also add new upgrades to NetworkUpgradeInfo in upgrades.cpp
     MAX_NETWORK_UPGRADES
 };

@@ -79,6 +79,11 @@ struct EquihashInfo EquihashUpgradeInfo[Consensus::MAX_NETWORK_UPGRADES] = {
     {
         /* N = */ 192,
         /* K = */ 7,
+    },
+    // UPGRADE_CHECKDATASIG
+    {
+        /* N = */ 192,
+        /* K = */ 7,
     }
 };
 
